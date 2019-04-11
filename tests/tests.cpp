@@ -1,6 +1,10 @@
-#include "../include/sparse_to_dense_vector.h"
+#include <catch2/catch.hpp>
+
 #include <string>
-#include <iostream>
+
+#include <sparse_to_dense_vector.h>
+#include <light_sparse_to_dense_vector.h>
+
 
 using namespace cof;
 
@@ -17,18 +21,41 @@ public:
 	std::vector<std::string> tags{};
 };
 
-void WaitForEnterToContinue()
+TEST_CASE("Basic sparse_to_dense_vector things")
 {
-	std::cout << "To press continue, press enter...";
-	std::cin.get();
-}
-
-int main() {
+	return;
 	sparse_to_dense_vector<Entity> entity_vector{};
 
-	entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
-	entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+	REQUIRE(entity_vector.empty());
 
-	WaitForEnterToContinue();
-	return 0;
+	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
+	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+
+	REQUIRE(entity_vector.size() == 2);
+
+	entity_vector.erase(dogHandle);
+
+	REQUIRE(entity_vector.size() == 1);
+
+	CHECK(entity_vector[catHandle].name == "Cat");
+	CHECK(entity_vector[catHandle].tags == std::vector<std::string>{"Animal", "Lazy"});
+}
+
+TEST_CASE("Basic light_sparse_to_dense_vector things")
+{
+	light_sparse_to_dense_vector<Entity> entity_vector{};
+
+	REQUIRE(entity_vector.empty());
+
+	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
+	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+
+	REQUIRE(entity_vector.size() == 2);
+
+	entity_vector.erase(dogHandle);
+
+	REQUIRE(entity_vector.size() == 1);
+
+	CHECK(entity_vector[catHandle].name == "Cat");
+	CHECK(entity_vector[catHandle].tags == std::vector<std::string>{"Animal", "Lazy"});
 }

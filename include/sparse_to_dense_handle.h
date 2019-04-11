@@ -7,24 +7,26 @@ namespace cof
 	template<typename T>
 	struct std_handle {
 		uint32_t id;
+
+		friend bool operator==(const std_handle& lhs, const std_handle& rhs) { return lhs.id == rhs.id; }
+		friend bool operator!=(const std_handle& lhs, const std_handle& rhs) { return lhs.id != rhs.id; }
+		friend bool operator<(const std_handle& lhs, const std_handle& rhs) { return lhs.id < rhs.id; }
+		friend bool operator<=(const std_handle& lhs, const std_handle& rhs) { return lhs.id <= rhs.id; }
+		friend bool operator>(const std_handle& lhs, const std_handle& rhs) { return lhs.id > rhs.id; }
+		friend bool operator>=(const std_handle& lhs, const std_handle& rhs) { return lhs.id >= rhs.id; }
 	};
 	/// Handle for a `cof::light_sparse_to_dense_vector<T>`
 	template<typename T>
 	struct lstd_handle {
 		uint32_t id;
+
+		friend bool operator==(const lstd_handle& lhs, const lstd_handle& rhs) { return lhs.id == rhs.id; }
+		friend bool operator!=(const lstd_handle& lhs, const lstd_handle& rhs) { return lhs.id != rhs.id; }
+		friend bool operator<(const lstd_handle& lhs, const lstd_handle& rhs) { return lhs.id < rhs.id; }
+		friend bool operator<=(const lstd_handle& lhs, const lstd_handle& rhs) { return lhs.id <= rhs.id; }
+		friend bool operator>(const lstd_handle& lhs, const lstd_handle& rhs) { return lhs.id > rhs.id; }
+		friend bool operator>=(const lstd_handle& lhs, const lstd_handle& rhs) { return lhs.id >= rhs.id; }
 	};
-
-	template<typename T>
-	bool operator==(const std_handle<T>& lhs, const std_handle<T>& rhs)
-	{
-		return lhs.id == rhs.id;
-	}
-
-	template<typename T>
-	bool operator==(const lstd_handle<T>& lhs, const lstd_handle<T>& rhs)
-	{
-		return lhs.id == rhs.id;
-	}
 }
 
 namespace std

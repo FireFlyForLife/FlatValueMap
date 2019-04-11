@@ -78,18 +78,47 @@ TEST_CASE("sparse_to_dense_vector erase by iterator")
 
 TEST_CASE("sparse_to_dense_vector erase by iterator range")	
 {
-	sparse_to_dense_vector<Entity> entity_vector{};
-	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
-	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
-	auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
+	{
+		sparse_to_dense_vector<Entity> entity_vector{};
+		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
+		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+		auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
 
-	auto it = entity_vector.begin();
-	it = std::next(it);
+		auto it = entity_vector.begin();
+		it = std::next(it);
 
-	entity_vector.erase(it, entity_vector.end());
+		entity_vector.erase(it, entity_vector.end());
 
-	REQUIRE(entity_vector.size() == 1);
-	CHECK(entity_vector[dogHandle] == Entity{ "Dog", {"Animal", "Good boi"} });
+		REQUIRE(entity_vector.size() == 1);
+		CHECK(entity_vector[dogHandle] == Entity{ "Dog", {"Animal", "Good boi"} });
+	}
+	{
+		sparse_to_dense_vector<Entity> entity_vector{};
+		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
+		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+		auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
+		auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
+
+		entity_vector.erase(entity_vector.begin(), entity_vector.end());
+
+		CHECK(entity_vector.empty());
+	}
+
+	{
+		sparse_to_dense_vector<Entity> entity_vector{};
+		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
+		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+		auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
+		auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
+
+		auto it = entity_vector.begin();
+		it = std::next(it, 1);
+		entity_vector.erase(it, entity_vector.end());
+
+		CHECK(entity_vector.size() == 1);
+		CHECK(entity_vector[dogHandle] == Entity{ "Dog", {"Animal", "Good boi"} });
+
+	}
 }
 
 TEST_CASE("Basic light_sparse_to_dense_vector things")

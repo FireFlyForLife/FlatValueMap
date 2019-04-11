@@ -47,6 +47,8 @@ namespace cof
 		auto push_back(T&& t)->handle_t;
 
 		void erase(handle_t handleToDelete);
+		void erase(const_iterator position);
+		void erase(const_iterator first, const_iterator last);
 
 		auto begin()->iterator;
 		auto begin() const->const_iterator;
@@ -155,6 +157,26 @@ namespace cof
 		dense_vector.pop_back();
 
 		back_element_cached_iterator_valid = false;
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
+		const_iterator position)
+	{
+		std::size_t element_index = position - dense_vector.begin();
+		//TODO: Optimize this with custom function
+		handle_t handle = dense_to_sparse[element_index];
+		//TODO: ASSERT if exsits
+		erase(handle);
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
+		const_iterator first, const_iterator last)
+	{
+		//TODO: Implement this
+		assert(false);
+		
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>

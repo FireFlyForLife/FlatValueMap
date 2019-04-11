@@ -76,11 +76,8 @@ TEST_CASE("sparse_to_dense_vector erase by iterator")
 	CHECK(entity_vector[alienHandle] == Entity{ "Alien", {"NonHuman"} });
 }
 
-//TODO: Enable this test when erase(first,last) function is fixed
 TEST_CASE("sparse_to_dense_vector erase by iterator range")	
 {
-	return;
-
 	sparse_to_dense_vector<Entity> entity_vector{};
 	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });

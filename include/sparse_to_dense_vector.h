@@ -174,9 +174,21 @@ namespace cof
 	void sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
 		const_iterator first, const_iterator last)
 	{
-		//TODO: Implement this
-		assert(false);
-		
+		//TODO: Look for optimizations
+
+		auto count = last - first;
+		std::vector<handle_t> handles( count );
+
+		auto offset = first - begin();
+		for (int i = 0; i < count; ++i) {
+			auto dense_to_sparse_it = dense_to_sparse.find(offset + i);
+			assert(dense_to_sparse_it != dense_to_sparse.end());
+			handles[i] = dense_to_sparse_it->second;
+		}
+
+		for (handle_t handle : handles) {
+			erase(handle);
+		}
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>

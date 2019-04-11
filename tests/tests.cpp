@@ -23,7 +23,6 @@ public:
 
 TEST_CASE("Basic sparse_to_dense_vector things")
 {
-	return;
 	sparse_to_dense_vector<Entity> entity_vector{};
 
 	REQUIRE(entity_vector.empty());

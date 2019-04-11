@@ -20,7 +20,7 @@ namespace cof
 	private:
 		using SparseToDenseMap = std::unordered_map<handle_t, std::size_t, std::hash<handle_t>, std::equal_to<>, SparseToDenseAllocator>;
 		using SparseToDenseIterator = typename SparseToDenseMap::iterator;
-		using DenseToSparseMap = std::unordered_map<std::size_t, SparseToDenseIterator, std::hash<std::size_t>, std::equal_to<>, DenseToSparseAllocator>;
+		using DenseToSparseMap = std::unordered_map<std::size_t, handle_t, std::hash<std::size_t>, std::equal_to<>, DenseToSparseAllocator>;
 		using DenseToSparseIterator = typename DenseToSparseMap::iterator;
 		using DenseVector = std::vector<T, Allocator>;
 
@@ -43,7 +43,7 @@ namespace cof
 	public:
 		sparse_to_dense_vector() = default;
 
-		handle_t push_back(const T& t);
+		auto push_back(const T& t)->handle_t;
 		auto push_back(T&& t)->handle_t;
 
 		void erase(handle_t handleToDelete);
@@ -87,10 +87,12 @@ namespace cof
 		uint32_t element_id = ++internalIdCounter;
 		dense_vector.push_back(t);
 		sparse_to_dense.emplace(handle_t{ element_id }, element_index);
-		auto it = sparse_to_dense.find(handle_t{ element_id });
-		dense_to_sparse.emplace(element_index, it);
-		back_element_sparse_to_dense_iterator = dense_to_sparse.at(element_index);
-		back_element_sparse_to_dense_iterator = it;
+		auto sparse_to_dense_it = sparse_to_dense.find(handle_t{ element_id });
+		//TODO: Get direct returned iterator from .emplace()
+		dense_to_sparse.emplace(element_index, handle_t{ element_id });
+		auto dense_to_sparse_it = dense_to_sparse.find(element_index);
+		back_element_sparse_to_dense_iterator = sparse_to_dense_it;
+		back_element_dense_to_sparse_iterator = dense_to_sparse_it;
 		back_element_cached_iterator_valid = true;
 
 		return handle_t{ element_id };
@@ -103,10 +105,11 @@ namespace cof
 		uint32_t element_id = ++internalIdCounter;
 		dense_vector.push_back(t);
 		sparse_to_dense.emplace(handle_t{ element_id }, element_index);
-		auto it = sparse_to_dense.find(handle_t{ element_id });
-		dense_to_sparse.emplace(element_index, it);
-		back_element_sparse_to_dense_iterator = dense_to_sparse.at(element_index);
-		back_element_sparse_to_dense_iterator = it;
+		auto sparse_to_dense_it = sparse_to_dense.find(handle_t{ element_id });
+		dense_to_sparse.emplace(element_index, handle_t{ element_id });
+		auto dense_to_sparse_it = dense_to_sparse.find(element_index);
+		back_element_sparse_to_dense_iterator = sparse_to_dense_it;
+		back_element_dense_to_sparse_iterator = dense_to_sparse_it;
 		back_element_cached_iterator_valid = true;
 
 		return handle_t{ element_id };
@@ -117,27 +120,41 @@ namespace cof
 	{
 		auto removing_sparse_to_dense_it = sparse_to_dense.find(handleToDelete);
 		assert(removing_sparse_to_dense_it != sparse_to_dense.end());
-		SparseToDenseIterator std_it;
-		typename DenseToSparseMap::iterator dts_it;
-		if (back_element_cached_iterator_valid) {
-			std_it = back_element_sparse_to_dense_iterator;
-			dts_it = back_element_dense_to_sparse_iterator;
+		std::size_t removed_element_index = removing_sparse_to_dense_it->second;
+
+		DenseToSparseIterator back_dts_it;
+		if (removed_element_index != dense_vector.size() - 1) {
+			//Get the iterators for the back element where we are going to swap to 
+			SparseToDenseIterator back_std_it;
+
+			if (back_element_cached_iterator_valid) {
+				back_dts_it = back_element_dense_to_sparse_iterator;
+				back_std_it = back_element_sparse_to_dense_iterator;
+			} else {
+				back_dts_it = dense_to_sparse.find(dense_vector.size() - 1);
+				back_std_it = sparse_to_dense.find(back_dts_it->second);
+			}
+
+			assert(vector_in_range(dense_vector, removed_element_index));
+			auto& removed_element = dense_vector[removed_element_index];
+			auto& last_element = dense_vector.back();
+			std::swap(removed_element, last_element);
+
+			//After the swap, we want to fixup the swapped elements indices and ids in the lookup maps
+			back_std_it->second = removed_element_index;
+			dense_to_sparse.at(removed_element_index) = back_std_it->first;
 		} else {
-			dts_it = dense_to_sparse.find(dense_vector.size() - 1);
-			std_it = dts_it->second;
+			if (back_element_cached_iterator_valid) {
+				back_dts_it = back_element_dense_to_sparse_iterator;
+			} else {
+				back_dts_it = dense_to_sparse.find(dense_vector.size() - 1);
+			}
 		}
-		back_element_cached_iterator_valid = false;
-
-		auto removed_element_index = removing_sparse_to_dense_it->second;
-		assert(!dense_vector.empty() && vector_in_range(dense_vector, removed_element_index));
-		auto& removed_element = dense_vector.at(removed_element_index);
-		auto& last_element = dense_vector.back();
-		std::swap(removed_element, last_element);
-
-		std_it->second = removed_element_index;
 		sparse_to_dense.erase(removing_sparse_to_dense_it);
-		dense_to_sparse.erase(dts_it);
-		dense_vector.erase(--dense_vector.end());
+		dense_to_sparse.erase(back_dts_it);
+		dense_vector.pop_back();
+
+		back_element_cached_iterator_valid = false;
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
@@ -195,3 +212,4 @@ namespace cof
 		return dense_vector[element_index];
 	}
 }
+ 

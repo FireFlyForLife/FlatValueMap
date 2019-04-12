@@ -67,6 +67,8 @@ namespace cof
 		auto data() const->const_pointer;
 
 		bool contains(handle_t handle) const;
+		auto find(handle_t handle) -> iterator;
+		auto find(handle_t handle) const->const_iterator;
 
 		std::size_t size() const;
 		bool empty() const;
@@ -86,7 +88,6 @@ namespace cof
 	}
 #endif
 }
-
 
 
 //=============================================================================
@@ -291,6 +292,40 @@ namespace cof
 		handle_t handle) const
 	{
 		return sparse_to_dense.find(handle) != sparse_to_dense.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
+		handle_t handle) -> iterator
+	{
+		auto sparse_to_dense_it = sparse_to_dense.find(handle);
+		if(sparse_to_dense_it != sparse_to_dense.end()) {
+			std::size_t element_index = sparse_to_dense_it->second;
+			assert(vector_in_range(dense_vector, element_index));
+
+			auto dense_it = dense_vector.begin();
+			std::advance(dense_it, element_index);
+			return dense_it;
+		}
+
+		return dense_vector.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
+		handle_t handle) const -> const_iterator
+	{
+		auto sparse_to_dense_it = sparse_to_dense.find(handle);
+		if (sparse_to_dense_it != sparse_to_dense.end()) {
+			std::size_t element_index = sparse_to_dense_it->second;
+			assert(vector_in_range(dense_vector, element_index));
+
+			auto dense_it = dense_vector.begin();
+			std::advance(dense_it, element_index);
+			return dense_it;
+		}
+
+		return dense_vector.end();
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>

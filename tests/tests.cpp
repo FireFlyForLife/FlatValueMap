@@ -121,6 +121,30 @@ TEST_CASE("sparse_to_dense_vector erase by iterator range")
 	}
 }
 
+TEST_CASE("sparse_to_dense_vector things::find")
+{
+	sparse_to_dense_vector<Entity> entity_vector;
+
+	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
+	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
+	auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
+	auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
+
+	REQUIRE(entity_vector.size() == 4);
+
+	{
+		auto catIt = entity_vector.find(catHandle);
+		auto maikoit = entity_vector.find(maikoHandle);
+		auto alienIt = entity_vector.find(alienHandle);
+		auto dogIt = entity_vector.find(dogHandle);
+
+		CHECK(*catIt == Entity{ "Cat", {"Animal", "Lazy"} });
+		CHECK(*maikoit == Entity{ "Maiko", {"Human", "Programmer"} });
+		CHECK(*alienIt == Entity{ "Alien", {"NonHuman"} });
+		CHECK(*dogIt == Entity{ "Dog", {"Animal", "Good boi"} });
+	}
+}
+
 TEST_CASE("Basic light_sparse_to_dense_vector things")
 {
 	light_sparse_to_dense_vector<Entity> entity_vector{};

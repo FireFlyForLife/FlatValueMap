@@ -143,6 +143,21 @@ TEST_CASE("sparse_to_dense_vector things::find")
 		CHECK(*alienIt == Entity{ "Alien", {"NonHuman"} });
 		CHECK(*dogIt == Entity{ "Dog", {"Animal", "Good boi"} });
 	}
+
+	entity_vector.erase(catHandle);
+	entity_vector.erase(alienHandle);
+
+	{
+		auto catIt = entity_vector.find(catHandle);
+		auto maikoit = entity_vector.find(maikoHandle);
+		auto alienIt = entity_vector.find(alienHandle);
+		auto dogIt = entity_vector.find(dogHandle);
+
+		CHECK(catIt == entity_vector.end());
+		CHECK(*maikoit == Entity{ "Maiko", {"Human", "Programmer"} });
+		CHECK(alienIt == entity_vector.end());
+		CHECK(*dogIt == Entity{ "Dog", {"Animal", "Good boi"} });
+	}
 }
 
 TEST_CASE("Basic light_sparse_to_dense_vector things")

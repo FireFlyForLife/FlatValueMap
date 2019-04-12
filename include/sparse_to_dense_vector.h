@@ -72,6 +72,9 @@ namespace cof
 
 		std::size_t size() const;
 		bool empty() const;
+
+		void clear();
+
 		auto operator[](handle_t handle)->reference;
 		auto operator[](handle_t handle) const->const_reference;
 	};
@@ -338,6 +341,14 @@ namespace cof
 	bool sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::empty() const
 	{
 		return dense_vector.empty();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::clear()
+	{
+		dense_vector.clear();
+		sparse_to_dense.clear();
+		dense_to_sparse.clear();
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>

@@ -87,24 +87,44 @@ namespace cof
 		// This overload does a dense_to_sparse unordered_map lookup for every element in the range and then calls erase() with each sparse handle
 		void erase(const_iterator first, const_iterator last);
 
+		// Get a iterator to the first element in the dense_vector
 		auto begin()->iterator;
+		// Get a const iterator to the first element in the dense_vector
 		auto begin() const->const_iterator;
+		// Get a const iterator to the first element in the dense_vector
 		auto cbegin() const->const_iterator;
+		// Get a iterator past the last element in the dense_vector
 		auto end()->iterator;
+		// Get a const iterator past the last element in the dense_vector
 		auto end() const->const_iterator;
+		// Get a const iterator past the last element in the dense_vector
 		auto cend() const->const_iterator;
+		// Get a reverse iterator to the first element of the reversed container.
 		auto rbegin()->iterator;
+		// Get a const reverse iterator to the first element of the reversed container.
 		auto rbegin() const->const_iterator;
+		// Get a const reverse iterator to the first element of the reversed container.
 		auto crbegin() const->const_iterator;
+		// Get a reverse iterator to the last element of the reversed container.
 		auto rend()->iterator;
+		// Get a const reverse iterator to the last element of the reversed container.
 		auto rend() const->const_iterator;
+		// Get a const reverse iterator to the last element of the reversed container.
 		auto crend() const->const_iterator;
 
+		//TODO: Let the handles_begin & handles_end return a iterator which only exposes the handles, and not the indices.
+
+		// Get a iterator to the beginning of the sparse handles map;
 		auto handles_begin()->sparse_to_dense_iterator;
+		// Get a const iterator to the beginning of the sparse handles map;
 		auto handles_begin() const->const_sparse_to_dense_iterator;
+		// Get a const iterator to the beginning of the sparse handles map;
 		auto handles_cbegin() const->const_sparse_to_dense_iterator;
+		// Get a iterator to the end of the sparse handles map;
 		auto handles_end()->sparse_to_dense_iterator;
+		// Get a const iterator to the end of the sparse handles map;
 		auto handles_end() const->const_sparse_to_dense_iterator;
+		// Get a const iterator to the end of the sparse handles map;
 		auto handles_cend() const->const_sparse_to_dense_iterator;
 
 		// Get a reference the first element in the vector

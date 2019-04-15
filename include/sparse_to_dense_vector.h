@@ -10,6 +10,9 @@
 
 namespace cof
 {
+	// ReSharper disable CppInconsistentNaming
+
+
 	/// A sparse to dense vector. has a handle to index unordered_map for lookup, and index to handle unordered_map for quick erasing using erase remove idiom.
 	template<typename T, typename Allocator = std::allocator<T>, typename SparseToDenseAllocator = Allocator, typename DenseToSparseAllocator = Allocator>
 	class sparse_to_dense_vector
@@ -35,6 +38,13 @@ namespace cof
 		static uint32_t internalIdCounter;
 
 	public:
+		using value_type = T;
+		using allocator_type = Allocator;
+		using size_type = typename DenseVector::size_type;
+		using difference_type = typename DenseVector::difference_type;
+		using reverse_iterator = typename DenseVector::reverse_iterator;
+		using const_reverse_iterator = typename DenseVector::const_reverse_iterator;
+
 		using iterator = typename DenseVector::iterator;
 		using const_iterator = typename DenseVector::const_iterator;
 		using reference = typename DenseVector::reference;
@@ -56,8 +66,16 @@ namespace cof
 
 		auto begin()->iterator;
 		auto begin() const->const_iterator;
+		auto cbegin() const->const_iterator;
 		auto end()->iterator;
 		auto end() const->const_iterator;
+		auto cend() const->const_iterator;
+		auto rbegin()->iterator;
+		auto rbegin() const->const_iterator;
+		auto crbegin() const->const_iterator;
+		auto rend()->iterator;
+		auto rend() const->const_iterator;
+		auto crend() const->const_iterator;
 
 		auto front()->reference;
 		auto front() const->const_reference;
@@ -240,6 +258,13 @@ namespace cof
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	cbegin() const -> const_iterator
+	{
+		return dense_vector.cbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
 	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() -> iterator
 	{
 		return dense_vector.end();
@@ -249,6 +274,53 @@ namespace cof
 	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() const -> const_iterator
 	{
 		return dense_vector.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	cend() const -> const_iterator
+	{
+		return dense_vector.cend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rbegin() -> iterator
+	{
+		return dense_vector.rbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	rbegin() const -> const_iterator
+	{
+		return dense_vector.rbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	crbegin() const -> const_iterator
+	{
+		return dense_vector.crbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rend() -> iterator
+	{
+		return dense_vector.rend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	rend() const -> const_iterator
+	{
+		return dense_vector.rend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	crend() const -> const_iterator
+	{
+		return dense_vector.crbegin();
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
@@ -369,5 +441,7 @@ namespace cof
 		assert(vector_in_range(dense_vector, element_index));
 		return dense_vector[element_index];
 	}
+
+	// ReSharper restore CppInconsistentNaming
 }
  

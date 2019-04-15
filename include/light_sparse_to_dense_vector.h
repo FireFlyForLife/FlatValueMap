@@ -9,6 +9,9 @@
 
 namespace cof
 {
+	// ReSharper disable CppInconsistentNaming
+
+
 	/** \brief A vector like container which indexes with sparse "handles" instead of indices directly. And still has contiguous memory for it's elements. 
 	 *         light_sparse_to_dense_vector is more memory efficient then sparse_to_dense_vector but has a higher erase complexity on average.
 	 *
@@ -400,4 +403,7 @@ namespace cof
 		assert(false);
 		return sparse_to_dense.end();
 	}
+
+
+	// ReSharper restore CppInconsistentNaming
 }

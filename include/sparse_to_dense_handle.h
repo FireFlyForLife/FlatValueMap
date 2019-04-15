@@ -15,6 +15,7 @@ namespace cof
 		friend bool operator>(const std_handle& lhs, const std_handle& rhs) { return lhs.id > rhs.id; }
 		friend bool operator>=(const std_handle& lhs, const std_handle& rhs) { return lhs.id >= rhs.id; }
 	};
+
 	/// Handle for a `cof::light_sparse_to_dense_vector<T>`
 	template<typename T>
 	struct lstd_handle {

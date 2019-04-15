@@ -9,8 +9,17 @@
 
 namespace cof
 {
-	/// A sparse to dense vector. Does not include a index to vector map, so erasing elements is slower,
-	/// but memory usage is less, and insertion time is slightly better.
+	/** \brief A vector like container which indexes with sparse "handles" instead of indices directly. And still has contiguous memory for it's elements. 
+	 *         light_sparse_to_dense_vector is more memory efficient then sparse_to_dense_vector but has a higher erase complexity on average.
+	 *
+	 * \class light_sparse_to_dense_vector
+	 *
+	 * A sparse_to_dense_vector is a vector which uses a handle to access it's members instead of members directly. This level of indirection is useful if you need your indices to stay valid even if things get deleted etc.
+	 * The way it works is when you call operator[] with the handle, it first goes through a `unordered_map<handle_t, index_t>`(sparse to dense map) to get the index in the internal vector. This means that the elements themselves are still stored contiguously.
+	 * For erase this means we can make use of the swap erase idiom to avoid moving all later elements. However, to do the index to handle lookup, we need to iterate over the unordered_map which results in lower memory usage but a higher complexity for erase().
+	 * If speed is more important then the added memory cof::sparse_to_dense_vector should be used.
+	*/
+
 	template<typename T, typename Allocator = std::allocator<T>, typename SparseToDenseAllocator = Allocator>
 	class light_sparse_to_dense_vector
 	{

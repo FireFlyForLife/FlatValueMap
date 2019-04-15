@@ -13,7 +13,16 @@ namespace cof
 	// ReSharper disable CppInconsistentNaming
 
 
-	/// A sparse to dense vector. has a handle to index unordered_map for lookup, and index to handle unordered_map for quick erasing using erase remove idiom.
+	/** \brief A vector like container which indexes with sparse "handles" instead of indices directly. And still has contiguous memory for it's elements. 
+	 *         sparse_to_dense_vector uses more memory then light_sparse_to_dense_vector but has a lower erase() complexity on average.
+	 * 
+	 * \class sparse_to_dense_vector
+	 * 
+	 *  A sparse_to_dense_vector is a vector which uses a handle to access it's members instead of members directly. This level of indirection is useful if you need your indices to stay valid even if things get deleted etc. 
+	 * The way it works is when you call operator[] with the handle, it first goes through a `unordered_map<handle_t, index_t>`(sparse to dense map) to get the index in the internal vector. This means that the elements themselves are still stored contiguously.
+	 * For erase this means we can make use of the swap erase idiom to avoid moving all later elements. But to efficiently implement this, a second `unordered_map<index_t, handle_t>`(dense to sparse map) is used for getting the handle from an id.
+	 * This extra "dense to sparse map" costs more memory but will increase speed. If this tradeoff is not undesired take a look at cof::light_sparse_to_dense_vector .
+	*/
 	template<typename T, typename Allocator = std::allocator<T>, typename SparseToDenseAllocator = Allocator, typename DenseToSparseAllocator = Allocator>
 	class sparse_to_dense_vector
 	{

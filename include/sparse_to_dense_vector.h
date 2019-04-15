@@ -157,7 +157,7 @@ namespace cof
 
 		// Get the element indexed by it's handle
 		auto operator[](handle_t handle)->reference;
-		// Get the element indexed by it's handle
+		// Get the const element indexed by it's handle
 		auto operator[](handle_t handle) const->const_reference;
 	};
 

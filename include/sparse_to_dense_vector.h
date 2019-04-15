@@ -36,8 +36,11 @@ namespace cof
 		using DenseToSparseIterator = typename DenseToSparseMap::iterator;
 		using DenseVector = std::vector<T, Allocator>;
 
+		// The sparse_to_dense map is used for finding a the raw index of the dense_vector from a sparse handle
 		SparseToDenseMap sparse_to_dense{};
+		// The dense_to_sparse map is used for finding a sparse handle from a raw dense_vector index.
 		DenseToSparseMap dense_to_sparse{};
+		// The internal dense_vector, contains all elements contiguously. 
 		DenseVector dense_vector;
 
 		SparseToDenseIterator back_element_sparse_to_dense_iterator;
@@ -67,13 +70,21 @@ namespace cof
 	public:
 		sparse_to_dense_vector() = default;
 
+		// pushes back the moved element `t` to the internal dense_vector
 		auto push_back(const T& t)->handle_t;
+		// pushes back the a copy of element `t` to the internal dense_vector
 		auto push_back(T&& t)->handle_t;
+		// construct an element in place at the end of the internal dense_vector
 		template<typename... Args>
 		auto emplace_back(Args&&... args)->handle_t;
 
+		// erase a element from the vector. This overload is the most efficient
 		void erase(handle_t handleToDelete);
+		// erase a element from the vector. This overload is NOT the most efficient
+		// This overload does one dense_to_sparse unordered_map lookup and then calls erase() with the sparse handle
 		void erase(const_iterator position);
+		// erase a element from the vector. This overload is NOT the most efficient
+		// This overload does a dense_to_sparse unordered_map lookup for every element in the range and then calls erase() with each sparse handle
 		void erase(const_iterator first, const_iterator last);
 
 		auto begin()->iterator;
@@ -96,28 +107,46 @@ namespace cof
 		auto handles_end() const->const_sparse_to_dense_iterator;
 		auto handles_cend() const->const_sparse_to_dense_iterator;
 
+		// Get a reference the first element in the vector
 		auto front()->reference;
+		// Get a const reference to the first element in the vector
 		auto front() const->const_reference;
+		// Get a reference to the last element in the vector
 		auto back()->reference;
+		// Get a const reference to the last element in the vector
 		auto back() const->const_reference;
+		// Get the data pointer to the contiguous elements
 		auto data()->pointer;
+		// Get the const data pointer to the contiguous elements
 		auto data() const->const_pointer;
 
+		// Check if this sparse_to_dense_vector contains a element with this handle.
 		bool contains(handle_t handle) const;
+		// \returns a iterator to the element in the internal dense_vector if found. Else returns end()
 		auto find(handle_t handle) -> iterator;
+		// \returns a const iterator to the element in the internal dense_vector if found. Else returns cend()
 		auto find(handle_t handle) const->const_iterator;
 
+		// The amount of elements in this vector
 		std::size_t size() const;
+		// \returns if the amount of elements in this vector equal to zero
 		bool empty() const;
 
+		// Erase all elements(and thus deconstruct all elements)
 		void clear();
 
+		// Get the element indexed by it's handle
 		auto operator[](handle_t handle)->reference;
+		// Get the element indexed by it's handle
 		auto operator[](handle_t handle) const->const_reference;
 	};
 
 #if __cplusplus >= 201703L
 	namespace pmr {
+		/**
+		 * \brief A polymorphic memory allocator version of sparse_to_dense_vector
+		 *	Details
+		 */
 		template<typename T, typename Allocator = std::pmr::polymorphic_allocator<T>>
 		using sparse_to_dense_vector = cof::sparse_to_dense_vector<T, Allocator>;
 	}

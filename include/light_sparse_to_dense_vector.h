@@ -19,7 +19,6 @@ namespace cof
 	 * For erase this means we can make use of the swap erase idiom to avoid moving all later elements. However, to do the index to handle lookup, we need to iterate over the unordered_map which results in lower memory usage but a higher complexity for erase().
 	 * If speed is more important then the added memory cof::sparse_to_dense_vector should be used.
 	*/
-
 	template<typename T, typename Allocator = std::allocator<T>, typename SparseToDenseAllocator = Allocator>
 	class light_sparse_to_dense_vector
 	{
@@ -48,38 +47,78 @@ namespace cof
 	public:
 		light_sparse_to_dense_vector() = default;
 
+		// pushes back the moved element `t` to the internal dense_vector
 		auto push_back(const T& t) -> handle_t;
+		// pushes back the a copy of element `t` to the internal dense_vector
 		auto push_back(T&& t) -> handle_t;
+		// construct an element in place at the end of the internal dense_vector
 		template<typename... Args>
 		auto emplace_back(Args&&... args)->handle_t;
 
+		// erase a element from the vector. This overload is the most efficient
 		void erase(handle_t handleToRemove);
 
+		// The amount of elements in this vector
 		size_t size() const;
+		// \returns if the amount of elements in this vector equal to zero
 		bool empty() const;
+		// Check if this sparse_to_dense_vector contains a element with this handle.
 		bool contains(handle_t handle) const;
 
+		// Erase all elements(and thus deconstruct all elements)
 		void clear();
 
+		// Get the element indexed by it's handle
 		auto operator[](handle_t handle)->reference;
+		// Get the const element indexed by it's handle
 		auto operator[](handle_t handle) const->const_reference;
 
+		// Get a reference the first element in the vector
 		auto front()->reference;
+		// Get a const reference to the first element in the vector
 		auto front() const->const_reference;
+		// Get a reference to the last element in the vector
 		auto back()->reference;
+		// Get a const reference to the last element in the vector
 		auto back() const->const_reference;
+		// Get the data pointer to the contiguous elements
 		auto data()->pointer;
+		// Get the const data pointer to the contiguous elements
 		auto data() const->const_pointer;
 
+		// Get a iterator to the first element in the dense_vector
 		auto begin()->iterator;
+		// Get a const iterator to the first element in the dense_vector
 		auto begin() const->const_iterator;
+		// Get a const iterator to the first element in the dense_vector
+		auto cbegin() const->const_iterator;
+		// Get a iterator past the last element in the dense_vector
 		auto end()->iterator;
+		// Get a const iterator past the last element in the dense_vector
 		auto end() const->const_iterator;
+		// Get a const iterator past the last element in the dense_vector
+		auto cend() const->const_iterator;
+		// Get a reverse iterator to the first element of the reversed container.
+		auto rbegin()->iterator;
+		// Get a const reverse iterator to the first element of the reversed container.
+		auto rbegin() const->const_iterator;
+		// Get a const reverse iterator to the first element of the reversed container.
+		auto crbegin() const->const_iterator;
+		// Get a reverse iterator to the last element of the reversed container.
+		auto rend()->iterator;
+		// Get a const reverse iterator to the last element of the reversed container.
+		auto rend() const->const_iterator;
+		// Get a const reverse iterator to the last element of the reversed container.
+		auto crend() const->const_iterator;
 
+		//Temporarily disabled these functions until Issue #1 is resolved
+#ifdef ENABLE_LIGHT_SPARSE_TO_DENSE_VECTOR_FIND
 		auto find(handle_t handle)->iterator;
 		auto find(handle_t handle) const->const_iterator;
+#endif //END: ENABLE_LIGHT_SPARSE_TO_DENSE_VECTOR_FIND
 		
 	private:
+		// Do a dense to sparse lookup (raw index to sparse handle) by iterating over the sparse_to_dense map
 		auto dense_to_sparse(std::size_t denseIndex)->SparseToDenseIterator;
 	};
 
@@ -89,6 +128,10 @@ namespace cof
 
 #if __cplusplus > 201703L
 	namespace pmr {
+		/**
+		 * \brief A polymorphic memory allocator version of light_sparse_to_dense_vector
+		 *	Details
+		 */
 		template<typename T, typename Allocator = std::pmr::polymorphic_allocator<T>>
 		using light_sparse_to_dense_vector = cof::light_sparse_to_dense_vector<T, Allocator>;
 }
@@ -251,6 +294,12 @@ namespace cof
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::cbegin() const -> const_iterator
+	{
+		return dense_vector.cbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
 	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::end() -> iterator
 	{
 		return dense_vector.end();
@@ -262,6 +311,49 @@ namespace cof
 		return dense_vector.end();
 	}
 
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::cend() const -> const_iterator
+	{
+		return dense_vector.cend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::rbegin() -> iterator
+	{
+		return dense_vector.rbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::rbegin() const -> const_iterator
+	{
+		return dense_vector.rbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::crbegin() const -> const_iterator
+	{
+		return dense_vector.crbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::rend() -> iterator
+	{
+		return dense_vector.rend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::rend() const -> const_iterator
+	{
+		return dense_vector.rend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator>
+	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::crend() const -> const_iterator
+	{
+		return dense_vector.crend();
+	}
+
+#ifdef ENABLE_LIGHT_SPARSE_TO_DENSE_VECTOR_FIND
 	template <typename T, typename Allocator, typename SparseToDenseAllocator>
 	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::find(handle_t handle) -> iterator
 	{
@@ -294,6 +386,7 @@ namespace cof
 			return dense_vector.end();
 		}
 	}
+#endif //END: ifdef ENABLE_LIGHT_SPARSE_TO_DENSE_VECTOR_FIND
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator>
 	auto light_sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator>::dense_to_sparse(

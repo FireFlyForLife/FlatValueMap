@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "utils/vector_utils.h"
+#include "utils/container_utils.h"
 #include "sparse_to_dense_handle.h"
 
 

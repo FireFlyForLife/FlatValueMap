@@ -70,22 +70,34 @@ namespace cof
 	public:
 		sparse_to_dense_vector() = default;
 
-		// pushes back the moved element `t` to the internal dense_vector
-		auto push_back(const T& t)->handle_t;
-		// pushes back the a copy of element `t` to the internal dense_vector
-		auto push_back(T&& t)->handle_t;
-		// construct an element in place at the end of the internal dense_vector
-		template<typename... Args>
-		auto emplace_back(Args&&... args)->handle_t;
+		/// \Category Element access
 
-		// erase a element from the vector. This overload is the most efficient
-		void erase(handle_t handleToDelete);
-		// erase a element from the vector. This overload is NOT the most efficient
-		// This overload does one dense_to_sparse unordered_map lookup and then calls erase() with the sparse handle
-		void erase(const_iterator position);
-		// erase a element from the vector. This overload is NOT the most efficient
-		// This overload does a dense_to_sparse unordered_map lookup for every element in the range and then calls erase() with each sparse handle
-		void erase(const_iterator first, const_iterator last);
+		// Get the element indexed by it's handle
+		auto operator[](handle_t handle)->reference;
+		// Get the const element indexed by it's handle
+		auto operator[](handle_t handle) const->const_reference;
+		// Get a reference the first element in the vector
+		auto front()->reference;
+		// Get a const reference to the first element in the vector
+		auto front() const->const_reference;
+		// Get a reference to the last element in the vector
+		auto back()->reference;
+		// Get a const reference to the last element in the vector
+		auto back() const->const_reference;
+		// Get the data pointer to the contiguous elements
+		auto data()->pointer;
+		// Get the const data pointer to the contiguous elements
+		auto data() const->const_pointer;
+
+		// Check if this sparse_to_dense_vector contains a element with this handle.
+		bool contains(handle_t handle) const;
+		// \returns a iterator to the element in the internal dense_vector if found. Else returns end()
+		auto find(handle_t handle)->iterator;
+		// \returns a const iterator to the element in the internal dense_vector if found. Else returns cend()
+		auto find(handle_t handle) const->const_iterator;
+
+
+		/// \Category Iterators
 
 		// Get a iterator to the first element in the dense_vector
 		auto begin()->iterator;
@@ -127,38 +139,35 @@ namespace cof
 		// Get a const iterator to the end of the sparse handles map;
 		auto handles_cend() const->const_sparse_to_dense_iterator;
 
-		// Get a reference the first element in the vector
-		auto front()->reference;
-		// Get a const reference to the first element in the vector
-		auto front() const->const_reference;
-		// Get a reference to the last element in the vector
-		auto back()->reference;
-		// Get a const reference to the last element in the vector
-		auto back() const->const_reference;
-		// Get the data pointer to the contiguous elements
-		auto data()->pointer;
-		// Get the const data pointer to the contiguous elements
-		auto data() const->const_pointer;
 
-		// Check if this sparse_to_dense_vector contains a element with this handle.
-		bool contains(handle_t handle) const;
-		// \returns a iterator to the element in the internal dense_vector if found. Else returns end()
-		auto find(handle_t handle) -> iterator;
-		// \returns a const iterator to the element in the internal dense_vector if found. Else returns cend()
-		auto find(handle_t handle) const->const_iterator;
+		/// \Category Capacity
 
 		// The amount of elements in this vector
 		std::size_t size() const;
 		// \returns if the amount of elements in this vector equal to zero
 		bool empty() const;
 
+		/// \Category Modifiers
+
+		// pushes back the moved element `t` to the internal dense_vector
+		auto push_back(const T& t)->handle_t;
+		// pushes back the a copy of element `t` to the internal dense_vector
+		auto push_back(T&& t)->handle_t;
+		// construct an element in place at the end of the internal dense_vector
+		template<typename... Args>
+		auto emplace_back(Args&&... args)->handle_t;
+
+		// erase a element from the vector. This overload is the most efficient
+		void erase(handle_t handleToDelete);
+		// erase a element from the vector. This overload is NOT the most efficient
+		// This overload does one dense_to_sparse unordered_map lookup and then calls erase() with the sparse handle
+		void erase(const_iterator position);
+		// erase a element from the vector. This overload is NOT the most efficient
+		// This overload does a dense_to_sparse unordered_map lookup for every element in the range and then calls erase() with each sparse handle
+		void erase(const_iterator first, const_iterator last);
+
 		// Erase all elements(and thus deconstruct all elements)
 		void clear();
-
-		// Get the element indexed by it's handle
-		auto operator[](handle_t handle)->reference;
-		// Get the const element indexed by it's handle
-		auto operator[](handle_t handle) const->const_reference;
 	};
 
 #if __cplusplus >= 201703L
@@ -183,11 +192,245 @@ namespace cof
 	template<typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
 	uint32_t sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::internalIdCounter = 0; 
 
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](handle_t handle) -> reference
+	{
+		assert(sparse_to_dense.find(handle) != sparse_to_dense.end());
+		auto element_index = sparse_to_dense.at(handle);
+		assert(vector_in_range(dense_vector, element_index));
+		return dense_vector[element_index];
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](
+		handle_t handle) const -> const_reference
+	{
+		assert(sparse_to_dense.find(handle) != sparse_to_dense.end());
+		auto element_index = sparse_to_dense.at(handle);
+		assert(vector_in_range(dense_vector, element_index));
+		return dense_vector[element_index];
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::front() -> reference
+	{
+		return dense_vector.front();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		front() const -> const_reference
+	{
+		return dense_vector.front();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::back() -> reference
+	{
+		return dense_vector.back();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		back() const -> const_reference
+	{
+		return dense_vector.back();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::data() -> pointer
+	{
+		return dense_vector.data();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		data() const -> const_pointer
+	{
+		return dense_vector.data();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	bool sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::contains(
+		handle_t handle) const
+	{
+		return sparse_to_dense.find(handle) != sparse_to_dense.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
+		handle_t handle) -> iterator
+	{
+		auto sparse_to_dense_it = sparse_to_dense.find(handle);
+		if (sparse_to_dense_it != sparse_to_dense.end()) {
+			std::size_t element_index = sparse_to_dense_it->second;
+			assert(vector_in_range(dense_vector, element_index));
+
+			auto dense_it = dense_vector.begin();
+			std::advance(dense_it, element_index);
+			return dense_it;
+		}
+
+		return dense_vector.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
+		handle_t handle) const -> const_iterator
+	{
+		auto sparse_to_dense_it = sparse_to_dense.find(handle);
+		if (sparse_to_dense_it != sparse_to_dense.end()) {
+			std::size_t element_index = sparse_to_dense_it->second;
+			assert(vector_in_range(dense_vector, element_index));
+
+			auto dense_it = dense_vector.begin();
+			std::advance(dense_it, element_index);
+			return dense_it;
+		}
+
+		return dense_vector.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() -> iterator
+	{
+		return dense_vector.begin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() const -> const_iterator
+	{
+		return dense_vector.begin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		cbegin() const -> const_iterator
+	{
+		return dense_vector.cbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() -> iterator
+	{
+		return dense_vector.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() const -> const_iterator
+	{
+		return dense_vector.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		cend() const -> const_iterator
+	{
+		return dense_vector.cend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rbegin() -> iterator
+	{
+		return dense_vector.rbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		rbegin() const -> const_iterator
+	{
+		return dense_vector.rbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		crbegin() const -> const_iterator
+	{
+		return dense_vector.crbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rend() -> iterator
+	{
+		return dense_vector.rend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		rend() const -> const_iterator
+	{
+		return dense_vector.rend();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		crend() const -> const_iterator
+	{
+		return dense_vector.crbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		handles_begin() -> sparse_to_dense_iterator
+	{
+		return sparse_to_dense.begin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		handles_begin() const -> const_sparse_to_dense_iterator
+	{
+		return sparse_to_dense.begin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		handles_cbegin() const -> const_sparse_to_dense_iterator
+	{
+		return sparse_to_dense.cbegin();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		handles_end() -> sparse_to_dense_iterator
+	{
+		return sparse_to_dense.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		handles_end() const -> const_sparse_to_dense_iterator
+	{
+		return sparse_to_dense.end();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+		handles_cend() const -> const_sparse_to_dense_iterator
+	{
+		return sparse_to_dense.cend();
+	}
+
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	std::size_t sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::size() const
+	{
+		return dense_vector.size();
+	}
+
+	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	bool sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::empty() const
+	{
+		return dense_vector.empty();
+	}
+
+
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
 	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::push_back(const T& t) -> handle_t
 	{
 		std::size_t element_index = dense_vector.size();
-		uint32_t element_id = ++internalIdCounter;
+		uint32_t element_id = ++internalIdCounter; 
 		dense_vector.push_back(t);
 		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, handle_t{ element_id }, element_index);
 		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, handle_t{element_id});
@@ -306,218 +549,6 @@ namespace cof
 	}
 
 	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() -> iterator
-	{
-		return dense_vector.begin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() const -> const_iterator
-	{
-		return dense_vector.begin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	cbegin() const -> const_iterator
-	{
-		return dense_vector.cbegin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() -> iterator
-	{
-		return dense_vector.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() const -> const_iterator
-	{
-		return dense_vector.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	cend() const -> const_iterator
-	{
-		return dense_vector.cend();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rbegin() -> iterator
-	{
-		return dense_vector.rbegin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	rbegin() const -> const_iterator
-	{
-		return dense_vector.rbegin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	crbegin() const -> const_iterator
-	{
-		return dense_vector.crbegin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rend() -> iterator
-	{
-		return dense_vector.rend();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	rend() const -> const_iterator
-	{
-		return dense_vector.rend();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	crend() const -> const_iterator
-	{
-		return dense_vector.crbegin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	handles_begin() -> sparse_to_dense_iterator
-	{
-		return sparse_to_dense.begin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	handles_begin() const -> const_sparse_to_dense_iterator
-	{
-		return sparse_to_dense.begin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	handles_cbegin() const -> const_sparse_to_dense_iterator
-	{
-		return sparse_to_dense.cbegin();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	handles_end() -> sparse_to_dense_iterator
-	{
-		return sparse_to_dense.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	handles_end() const -> const_sparse_to_dense_iterator
-	{
-		return sparse_to_dense.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	handles_cend() const -> const_sparse_to_dense_iterator
-	{
-		return sparse_to_dense.cend();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::front() -> reference
-	{
-		return dense_vector.front();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	front() const -> const_reference
-	{
-		return dense_vector.front();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::back() -> reference
-	{
-		return dense_vector.back();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	back() const -> const_reference
-	{
-		return dense_vector.back();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::data() -> pointer
-	{
-		return dense_vector.data();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
-	data() const -> const_pointer
-	{
-		return dense_vector.data();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	bool sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::contains(
-		handle_t handle) const
-	{
-		return sparse_to_dense.find(handle) != sparse_to_dense.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
-		handle_t handle) -> iterator
-	{
-		auto sparse_to_dense_it = sparse_to_dense.find(handle);
-		if(sparse_to_dense_it != sparse_to_dense.end()) {
-			std::size_t element_index = sparse_to_dense_it->second;
-			assert(vector_in_range(dense_vector, element_index));
-
-			auto dense_it = dense_vector.begin();
-			std::advance(dense_it, element_index);
-			return dense_it;
-		}
-
-		return dense_vector.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
-		handle_t handle) const -> const_iterator
-	{
-		auto sparse_to_dense_it = sparse_to_dense.find(handle);
-		if (sparse_to_dense_it != sparse_to_dense.end()) {
-			std::size_t element_index = sparse_to_dense_it->second;
-			assert(vector_in_range(dense_vector, element_index));
-
-			auto dense_it = dense_vector.begin();
-			std::advance(dense_it, element_index);
-			return dense_it;
-		}
-
-		return dense_vector.end();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	std::size_t sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::size() const
-	{
-		return dense_vector.size();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	bool sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::empty() const
-	{
-		return dense_vector.empty();
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
 	void sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::clear()
 	{
 		dense_vector.clear();
@@ -525,24 +556,6 @@ namespace cof
 		dense_to_sparse.clear();
 	}
 
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](handle_t handle) -> reference
-	{
-		assert(sparse_to_dense.find(handle) != sparse_to_dense.end());
-		auto element_index = sparse_to_dense.at(handle);
-		assert(vector_in_range(dense_vector, element_index));
-		return dense_vector[element_index];
-	}
-
-	template <typename T, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto sparse_to_dense_vector<T, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](
-		handle_t handle) const -> const_reference
-	{
-		assert(sparse_to_dense.find(handle) != sparse_to_dense.end());
-		auto element_index = sparse_to_dense.at(handle);
-		assert(vector_in_range(dense_vector, element_index));
-		return dense_vector[element_index];
-	}
 
 	// ReSharper restore CppInconsistentNaming
 }

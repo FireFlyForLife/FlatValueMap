@@ -130,6 +130,7 @@
     <ClInclude Include="include\utils\defines.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="tests\light_flat_value_map_find_tests.cpp" />
     <ClCompile Include="tests\tests.cpp" />
     <ClCompile Include="tests\test_main.cpp" />
   </ItemGroup>

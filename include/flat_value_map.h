@@ -5,7 +5,7 @@
 #include <cassert>
 
 #include "utils/container_utils.h"
-#include "sparse_to_dense_handle.h"
+#include "flat_value_map_handle.h"
 
 
 namespace cof
@@ -27,7 +27,7 @@ namespace cof
 	class flat_value_map
 	{
 	public:
-		using handle_t = std_handle<T>;
+		using handle_t = fvm_handle<T>;
 
 	private:
 		using SparseToDenseMap = std::unordered_map<handle_t, std::size_t, std::hash<handle_t>, std::equal_to<>, SparseToDenseAllocator>;

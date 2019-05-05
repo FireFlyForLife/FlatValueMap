@@ -119,9 +119,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\light_sparse_to_dense_vector.h" />
+    <ClInclude Include="include\light_flat_value_map.h" />
     <ClInclude Include="include\sparse_to_dense_handle.h" />
-    <ClInclude Include="include\sparse_to_dense_vector.h" />
+    <ClInclude Include="include\flat_value_map.h" />
     <ClInclude Include="include\utils\container_utils.h" />
     <ClInclude Include="include\utils\defines.h" />
   </ItemGroup>

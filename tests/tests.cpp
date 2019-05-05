@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include <sparse_to_dense_vector.h>
-#include <light_sparse_to_dense_vector.h>
+#include <flat_value_map.h>
+#include <light_flat_value_map.h>
 
 
 using namespace cof;
@@ -30,9 +30,9 @@ public:
 	friend bool operator!=(const Entity& lhs, const Entity& rhs) { return !(lhs == rhs); }
 };
 
-TEST_CASE("Basic sparse_to_dense_vector things")
+TEST_CASE("Basic flat_value_map things")
 {
-	sparse_to_dense_vector<Entity> entity_vector{};
+	flat_value_map<Entity> entity_vector{};
 
 	REQUIRE(entity_vector.empty());
 
@@ -52,9 +52,9 @@ TEST_CASE("Basic sparse_to_dense_vector things")
 	CHECK(entity_vector.empty());
 }
 
-TEST_CASE("sparse_to_dense_vector erase by iterator")
+TEST_CASE("flat_value_map erase by iterator")
 {
-	sparse_to_dense_vector<Entity> entity_vector{};
+	flat_value_map<Entity> entity_vector{};
 	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 	auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
@@ -76,10 +76,10 @@ TEST_CASE("sparse_to_dense_vector erase by iterator")
 	CHECK(entity_vector[alienHandle] == Entity{ "Alien", {"NonHuman"} });
 }
 
-TEST_CASE("sparse_to_dense_vector erase by iterator range")	
+TEST_CASE("flat_value_map erase by iterator range")	
 {
 	{
-		sparse_to_dense_vector<Entity> entity_vector{};
+		flat_value_map<Entity> entity_vector{};
 		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 		auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
@@ -93,7 +93,7 @@ TEST_CASE("sparse_to_dense_vector erase by iterator range")
 		CHECK(entity_vector[dogHandle] == Entity{ "Dog", {"Animal", "Good boi"} });
 	}
 	{
-		sparse_to_dense_vector<Entity> entity_vector{};
+		flat_value_map<Entity> entity_vector{};
 		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 		auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
@@ -105,7 +105,7 @@ TEST_CASE("sparse_to_dense_vector erase by iterator range")
 	}
 
 	{
-		sparse_to_dense_vector<Entity> entity_vector{};
+		flat_value_map<Entity> entity_vector{};
 		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 		auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
@@ -121,9 +121,9 @@ TEST_CASE("sparse_to_dense_vector erase by iterator range")
 	}
 }
 
-TEST_CASE("sparse_to_dense_vector things::find")
+TEST_CASE("flat_value_map things::find")
 {
-	sparse_to_dense_vector<Entity> entity_vector;
+	flat_value_map<Entity> entity_vector;
 
 	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
@@ -160,9 +160,9 @@ TEST_CASE("sparse_to_dense_vector things::find")
 	}
 }
 
-TEST_CASE("Basic light_sparse_to_dense_vector things")
+TEST_CASE("Basic light_flat_value_map things")
 {
-	light_sparse_to_dense_vector<Entity> entity_vector{};
+	light_flat_value_map<Entity> entity_vector{};
 
 	REQUIRE(entity_vector.empty());
 

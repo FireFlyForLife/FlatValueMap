@@ -15,19 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\sparse_to_dense_vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\sparse_to_dense_handle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\light_sparse_to_dense_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utils\defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utils\container_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\flat_value_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\light_flat_value_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

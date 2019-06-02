@@ -26,7 +26,7 @@ namespace cof
 	template<typename T, typename SparseHandle = fvm_handle<T>,
 		typename Allocator = std::allocator<T>,
 		typename SparseToDenseAllocator = typename Allocator::template rebind< std::pair<const SparseHandle, uint32_t> >::other,
-		typename DenseToSparseAllocator = typename Allocator::template rebind< std::pair<uint32_t, const SparseHandle> >::other
+		typename DenseToSparseAllocator = typename Allocator::template rebind< std::pair<const uint32_t, SparseHandle> >::other
 	>
 	class flat_value_map
 	{
@@ -469,7 +469,7 @@ namespace cof
 		uint32_t element_id = ++internalIdCounter;
 		dense_vector.emplace_back(std::forward<Args>(args)...);
 		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, handle_t{element_id}, element_index);
-		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_vector, element_index, handle_t{element_id});
+		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, handle_t{element_id});
 		back_element_sparse_to_dense_iterator = sparse_to_dense_it;
 		back_element_dense_to_sparse_iterator = dense_to_sparse_it;
 		back_element_cached_iterator_valid = true;

@@ -6,6 +6,7 @@
 
 #include "utils/container_utils.h"
 #include "flat_value_map_handle.h"
+#include "utils/tmp_compatibility.h"
 
 
 namespace cof
@@ -25,8 +26,8 @@ namespace cof
 	*/
 	template<typename T, typename SparseHandle = fvm_handle<T>,
 		typename Allocator = std::allocator<T>,
-		typename SparseToDenseAllocator = typename Allocator::template rebind< std::pair<const SparseHandle, uint32_t> >::other,
-		typename DenseToSparseAllocator = typename Allocator::template rebind< std::pair<const uint32_t, SparseHandle> >::other
+		typename SparseToDenseAllocator = typename rebind<Allocator, std::pair<const SparseHandle, uint32_t> >::other,
+		typename DenseToSparseAllocator = typename rebind<Allocator, std::pair<const uint32_t, SparseHandle> >::other
 	>
 	class flat_value_map
 	{

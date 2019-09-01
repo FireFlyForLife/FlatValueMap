@@ -1,3 +1,4 @@
+#pragma once
 #if _MSVC_LANG < 201703L
 #include <memory>
 #endif

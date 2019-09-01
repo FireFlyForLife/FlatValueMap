@@ -44,5 +44,8 @@
     <ClCompile Include="tests\different_allocator_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tests\move_only_types_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

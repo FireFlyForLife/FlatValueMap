@@ -6,7 +6,7 @@ It has O(1) iteration speed because all the values are stored in a vector.
 
 The API is almost identical to std::map. With some extra additions to get more control over the internals.
 
-![Explanation with a image](https://i.imgur.com/lVYfcvN.png)
+![Explanation with a image](https://i.imgur.com/q6JGaIQ.png)
 
 ## Code Example
 ```cpp

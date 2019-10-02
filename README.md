@@ -74,7 +74,7 @@ int example_main(int argc, char* argv[])
 There are two versions of the FlatValueMap, they both have an (almost) identical API but they have slightly different internals.
 
 ### cof::FlatValueMap
-This implementation uses a `unordered_map<handle, index>` as sparse to dense map for quick lookup times and uses `unordered_map<index, SparseToDense::iterator>` as a DenseToSparse map for quick deletion times.
+This implementation uses a `unordered_map<handle, index>` as sparse to dense map for quick lookup times and uses `unordered_map<index, handle>` as a DenseToSparse map for quick deletion times.
 This causes it to use more memory but will perform more consistent.
 
 ### cof::LightFlatValueMap

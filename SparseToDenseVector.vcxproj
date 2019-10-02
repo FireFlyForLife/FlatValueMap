@@ -90,6 +90,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)external\catch2\include;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -128,6 +129,7 @@
     <ClInclude Include="include\flat_value_map.h" />
     <ClInclude Include="include\utils\container_utils.h" />
     <ClInclude Include="include\utils\defines.h" />
+    <ClInclude Include="include\utils\tmp_compatibility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tests\different_allocator_test.cpp" />

@@ -30,6 +30,9 @@
     <ClInclude Include="include\flat_value_map_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\utils\tmp_compatibility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tests\tests.cpp">

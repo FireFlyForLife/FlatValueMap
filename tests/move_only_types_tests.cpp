@@ -3,6 +3,7 @@
 #include <string>
 #include <type_traits>
 
+#include "flat_value_map_handle.h"
 #include "flat_value_map.h"
 #include "light_flat_value_map.h"
 
@@ -34,9 +35,13 @@ struct OnlyMoveable
 };
 static_assert(!std::is_copy_constructible_v<OnlyMoveable>&& std::is_move_constructible_v<OnlyMoveable>, "The type should be move only");
 
-TEST_CASE("flat_value_map with move-only type")
+using OnlyMoveableHandle = cof::FvmHandle<OnlyMoveable>;
+using VecOnlyMoveHandle = cof::FvmHandle<OnlyMoveable>;
+
+
+TEST_CASE("FlatValueMap with move-only type")
 {
-	cof::flat_value_map<OnlyMoveable> fvm{};
+	cof::FlatValueMap<OnlyMoveableHandle, OnlyMoveable> fvm{};
 
 	REQUIRE(fvm.empty());
 
@@ -56,9 +61,9 @@ TEST_CASE("flat_value_map with move-only type")
 	CHECK(fvm.empty());
 }
 
-TEST_CASE("light_flat_value_map with move-only type")
+TEST_CASE("LightFlatValueMap with move-only type")
 {
-	cof::light_flat_value_map<OnlyMoveable> fvm{};
+	cof::LightFlatValueMap<OnlyMoveableHandle, OnlyMoveable> fvm{};
 
 	REQUIRE(fvm.empty());
 
@@ -79,9 +84,9 @@ TEST_CASE("light_flat_value_map with move-only type")
 }
 
 
-TEST_CASE("flat_value_map with move-only vector type")
+TEST_CASE("FlatValueMap with move-only vector type")
 {
-	cof::flat_value_map<std::vector<OnlyMoveable>> fvm{};
+	cof::FlatValueMap<VecOnlyMoveHandle, std::vector<OnlyMoveable>> fvm{};
 
 	REQUIRE(fvm.empty());
 
@@ -93,7 +98,7 @@ TEST_CASE("flat_value_map with move-only vector type")
 	auto catHandle = fvm.push_back(std::move(listOfAnimals));
 
 	REQUIRE(fvm.size() == 2);
-	cof::flat_value_map<std::vector<OnlyMoveable>> fvm2 = std::move(fvm);
+	cof::FlatValueMap<VecOnlyMoveHandle, std::vector<OnlyMoveable>> fvm2 = std::move(fvm);
 	REQUIRE(fvm2.size() == 2);
 
 	fvm2.erase(dogHandle);
@@ -107,9 +112,9 @@ TEST_CASE("flat_value_map with move-only vector type")
 	CHECK(fvm2.empty());
 }
 
-TEST_CASE("light_flat_value_map with move-only vector type")
+TEST_CASE("LightFlatValueMap with move-only vector type")
 {
-	cof::light_flat_value_map<std::vector<OnlyMoveable>> fvm{};
+	cof::LightFlatValueMap<VecOnlyMoveHandle, std::vector<OnlyMoveable>> fvm{};
 
 	REQUIRE(fvm.empty());
 
@@ -121,7 +126,7 @@ TEST_CASE("light_flat_value_map with move-only vector type")
 	auto catHandle = fvm.push_back(std::move(listOfAnimals));
 
 	REQUIRE(fvm.size() == 2);
-	cof::light_flat_value_map<std::vector<OnlyMoveable>> fvm2 = std::move(fvm);
+	cof::LightFlatValueMap<VecOnlyMoveHandle, std::vector<OnlyMoveable>> fvm2 = std::move(fvm);
 	REQUIRE(fvm2.size() == 2);
 
 	fvm2.erase(dogHandle);

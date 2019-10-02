@@ -11,6 +11,7 @@ class PassThroughAllocator
 
 public:
 	using value_type = typename StdAllocator::value_type;
+#if _MSVC_LANG < 201703L
 	using pointer = typename StdAllocator::pointer;
 	using const_pointer = typename StdAllocator::const_pointer;
 	using reference = typename StdAllocator::reference;
@@ -21,7 +22,7 @@ public:
 	template< class U > 
 	struct rebind { typedef PassThroughAllocator<U> other; };
 	using is_always_equal = typename StdAllocator::is_always_equal;
-
+#endif
 
 	PassThroughAllocator() : internalAllocator() {}
 	template<class _Other>
@@ -68,7 +69,7 @@ struct TestType
 
 TEST_CASE("Custom allocator test")
 {
-	cof::flat_value_map<TestType, cof::fvm_handle<TestType>, PassThroughAllocator<TestType>> fvm{};
+	cof::FlatValueMap<cof::FvmHandle<TestType>, TestType, PassThroughAllocator<TestType>> fvm{};
 
 	TestType tValue{};
 	auto copyHandle = fvm.push_back(tValue);

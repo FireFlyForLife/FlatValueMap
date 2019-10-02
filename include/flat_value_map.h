@@ -15,31 +15,32 @@ namespace cof
 
 
 	/** \brief A vector like container which indexes with sparse "handles" instead of indices directly. And still has contiguous memory for it's elements. 
-	 *         flat_value_map uses more memory then light_flat_value_map but has a lower erase() complexity on average.
+	 *         FlatValueMap uses more memory then LightFlatValueMap but has a lower erase() complexity on average.
 	 * 
-	 * \class flat_value_map
+	 * \class FlatValueMap
 	 * 
-	 *  A flat_value_map is a vector which uses a handle to access it's members instead of members directly. This level of indirection is useful if you need your indices to stay valid even if things get deleted etc. 
-	 * The way it works is when you call operator[] with the handle, it first goes through a `unordered_map<handle_t, index_t>`(sparse to dense map) to get the index in the internal vector. This means that the elements themselves are still stored contiguously.
-	 * For erase this means we can make use of the swap erase idiom to avoid moving all later elements. But to efficiently implement this, a second `unordered_map<index_t, handle_t>`(dense to sparse map) is used for getting the handle from an id.
-	 * This extra "dense to sparse map" costs more memory but will increase speed. If this tradeoff is not undesired take a look at cof::light_flat_value_map .
+	 *  A FlatValueMap is a vector which uses a handle to access it's members instead of members directly. This level of indirection is useful if you need your indices to stay valid even if things get deleted etc. 
+	 * The way it works is when you call operator[] with the handle, it first goes through a `unordered_map<HandleType, index_t>`(sparse to dense map) to get the index in the internal vector. This means that the elements themselves are still stored contiguously.
+	 * For erase this means we can make use of the swap erase idiom to avoid moving all later elements. But to efficiently implement this, a second `unordered_map<index_t, HandleType>`(dense to sparse map) is used for getting the handle from an id.
+	 * This extra "dense to sparse map" costs more memory but will increase speed. If this tradeoff is not undesired take a look at cof::LightFlatValueMap .
 	*/
-	template<typename T, typename SparseHandle = fvm_handle<T>,
-		typename Allocator = std::allocator<T>,
-		typename SparseToDenseAllocator = typename rebind<Allocator, std::pair<const SparseHandle, uint32_t> >::other,
-		typename DenseToSparseAllocator = typename rebind<Allocator, std::pair<const uint32_t, SparseHandle> >::other
+	template<typename SparseHandle, typename Value,
+		typename Allocator = std::allocator<Value>,
+		typename SparseToDenseAllocator = typename cof::rebind<Allocator, std::pair<const SparseHandle, std::size_t> >::other,
+		typename DenseToSparseAllocator = typename cof::rebind<Allocator, std::pair<const std::size_t, SparseHandle> >::other
 	>
-	class flat_value_map
+	class FlatValueMap
 	{
 	public:
-		using handle_t = fvm_handle<T>;
+		using HandleType = SparseHandle;
+		using ValueType = Value;
 
 	private:
-		using SparseToDenseMap = std::unordered_map<handle_t, std::size_t, std::hash<handle_t>, std::equal_to<>, SparseToDenseAllocator>;
+		using SparseToDenseMap = std::unordered_map<HandleType, std::size_t, std::hash<HandleType>, std::equal_to<>, SparseToDenseAllocator>;
 		using SparseToDenseIterator = typename SparseToDenseMap::iterator;
-		using DenseToSparseMap = std::unordered_map<std::size_t, handle_t, std::hash<std::size_t>, std::equal_to<>, DenseToSparseAllocator>;
+		using DenseToSparseMap = std::unordered_map<std::size_t, HandleType, std::hash<std::size_t>, std::equal_to<>, DenseToSparseAllocator>;
 		using DenseToSparseIterator = typename DenseToSparseMap::iterator;
-		using DenseVector = std::vector<T, Allocator>;
+		using DenseVector = std::vector<ValueType, Allocator>;
 
 		// The sparse_to_dense map is used for finding a the raw index of the dense_vector from a sparse handle
 		SparseToDenseMap sparse_to_dense{};
@@ -55,7 +56,7 @@ namespace cof
 		static uint32_t internalIdCounter;
 
 	public:
-		using value_type = T;
+		using value_type = ValueType;
 		using allocator_type = Allocator;
 		using size_type = typename DenseVector::size_type;
 		using difference_type = typename DenseVector::difference_type;
@@ -73,14 +74,14 @@ namespace cof
 		using const_sparse_to_dense_iterator = typename SparseToDenseMap::const_iterator;
 
 	public:
-		flat_value_map() = default;
+		FlatValueMap() = default;
 
 		/// \Category Element access
 
 		// Get the element indexed by it's handle
-		auto operator[](handle_t handle)->reference;
+		auto operator[](HandleType handle)->reference;
 		// Get the const element indexed by it's handle
-		auto operator[](handle_t handle) const->const_reference;
+		auto operator[](HandleType handle) const->const_reference;
 		// Get a reference the first element in the vector
 		auto front()->reference;
 		// Get a const reference to the first element in the vector
@@ -94,12 +95,12 @@ namespace cof
 		// Get the const data pointer to the contiguous elements
 		auto data() const->const_pointer;
 
-		// Check if this flat_value_map contains a element with this handle.
-		bool contains(handle_t handle) const;
+		// Check if this FlatValueMap contains a element with this handle.
+		bool contains(HandleType handle) const;
 		// \returns a iterator to the element in the internal dense_vector if found. Else returns end()
-		auto find(handle_t handle)->iterator;
+		auto find(HandleType handle)->iterator;
 		// \returns a const iterator to the element in the internal dense_vector if found. Else returns cend()
-		auto find(handle_t handle) const->const_iterator;
+		auto find(HandleType handle) const->const_iterator;
 
 
 		/// \Category Iterators
@@ -155,15 +156,15 @@ namespace cof
 		/// \Category Modifiers
 
 		// pushes back the moved element `t` to the internal dense_vector
-		auto push_back(const T& t)->handle_t;
+		auto push_back(const Value& t)->HandleType;
 		// pushes back the a copy of element `t` to the internal dense_vector
-		auto push_back(T&& t)->handle_t;
+		auto push_back(Value&& t)->HandleType;
 		// construct an element in place at the end of the internal dense_vector
 		template<typename... Args>
-		auto emplace_back(Args&&... args)->handle_t;
+		auto emplace_back(Args&&... args)->HandleType;
 
 		// erase a element from the vector. This overload is the most efficient
-		void erase(handle_t handleToDelete);
+		void erase(HandleType handleToDelete);
 		// erase a element from the vector. This overload is NOT the most efficient
 		// This overload does one dense_to_sparse unordered_map lookup and then calls erase() with the sparse handle
 		void erase(const_iterator position);
@@ -178,11 +179,11 @@ namespace cof
 #if __cplusplus >= 201703L
 	namespace pmr {
 		/**
-		 * \brief A polymorphic memory allocator version of flat_value_map
+		 * \brief A polymorphic memory allocator version of FlatValueMap
 		 *	Details
 		 */
-		template<typename T, typename Allocator = std::pmr::polymorphic_allocator<T>>
-		using flat_value_map = cof::flat_value_map<T, Allocator>;
+		template<typename Value, typename Allocator = std::pmr::polymorphic_allocator<T>>
+		using FlatValueMap = cof::FlatValueMap<Value, Allocator>;
 	}
 #endif
 }
@@ -194,12 +195,12 @@ namespace cof
 
 namespace cof
 {
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	uint32_t flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::internalIdCounter = 0;
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	uint32_t FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::internalIdCounter = 0;
 
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](handle_t handle) -> reference
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](HandleType handle) -> reference
 	{
 		assert(sparse_to_dense.find(handle) != sparse_to_dense.end());
 		auto element_index = sparse_to_dense.at(handle);
@@ -207,9 +208,9 @@ namespace cof
 		return dense_vector[element_index];
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](
-		handle_t handle) const -> const_reference
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::operator[](
+		HandleType handle) const -> const_reference
 	{
 		assert(sparse_to_dense.find(handle) != sparse_to_dense.end());
 		auto element_index = sparse_to_dense.at(handle);
@@ -217,55 +218,55 @@ namespace cof
 		return dense_vector[element_index];
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::front() -> reference
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::front() -> reference
 	{
 		return dense_vector.front();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		front() const -> const_reference
 	{
 		return dense_vector.front();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::back() -> reference
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::back() -> reference
 	{
 		return dense_vector.back();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		back() const -> const_reference
 	{
 		return dense_vector.back();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::data() -> pointer
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::data() -> pointer
 	{
 		return dense_vector.data();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		data() const -> const_pointer
 	{
 		return dense_vector.data();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	bool flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::contains(
-		handle_t handle) const
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	bool FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::contains(
+		HandleType handle) const
 	{
 		return sparse_to_dense.find(handle) != sparse_to_dense.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
-		handle_t handle) -> iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
+		HandleType handle) -> iterator
 	{
 		auto sparse_to_dense_it = sparse_to_dense.find(handle);
 		if (sparse_to_dense_it != sparse_to_dense.end()) {
@@ -280,9 +281,9 @@ namespace cof
 		return dense_vector.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
-		handle_t handle) const -> const_iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::find(
+		HandleType handle) const -> const_iterator
 	{
 		auto sparse_to_dense_it = sparse_to_dense.find(handle);
 		if (sparse_to_dense_it != sparse_to_dense.end()) {
@@ -297,189 +298,189 @@ namespace cof
 		return dense_vector.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() -> iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() -> iterator
 	{
 		return dense_vector.begin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() const -> const_iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::begin() const -> const_iterator
 	{
 		return dense_vector.begin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		cbegin() const -> const_iterator
 	{
 		return dense_vector.cbegin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() -> iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() -> iterator
 	{
 		return dense_vector.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() const -> const_iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::end() const -> const_iterator
 	{
 		return dense_vector.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		cend() const -> const_iterator
 	{
 		return dense_vector.cend();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rbegin() -> iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rbegin() -> iterator
 	{
 		return dense_vector.rbegin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		rbegin() const -> const_iterator
 	{
 		return dense_vector.rbegin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		crbegin() const -> const_iterator
 	{
 		return dense_vector.crbegin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rend() -> iterator
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::rend() -> iterator
 	{
 		return dense_vector.rend();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		rend() const -> const_iterator
 	{
 		return dense_vector.rend();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		crend() const -> const_iterator
 	{
 		return dense_vector.crbegin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		handles_begin() -> sparse_to_dense_iterator
 	{
 		return sparse_to_dense.begin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		handles_begin() const -> const_sparse_to_dense_iterator
 	{
 		return sparse_to_dense.begin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		handles_cbegin() const -> const_sparse_to_dense_iterator
 	{
 		return sparse_to_dense.cbegin();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		handles_end() -> sparse_to_dense_iterator
 	{
 		return sparse_to_dense.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		handles_end() const -> const_sparse_to_dense_iterator
 	{
 		return sparse_to_dense.end();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::
 		handles_cend() const -> const_sparse_to_dense_iterator
 	{
 		return sparse_to_dense.cend();
 	}
 
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	std::size_t flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::size() const
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	std::size_t FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::size() const
 	{
 		return dense_vector.size();
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	bool flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::empty() const
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	bool FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::empty() const
 	{
 		return dense_vector.empty();
 	}
 
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::push_back(const T& t) -> handle_t
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::push_back(const Value& t) -> HandleType
 	{
 		std::size_t element_index = dense_vector.size();
 		uint32_t element_id = ++internalIdCounter; 
 		dense_vector.push_back(t);
-		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, handle_t{ element_id }, element_index);
-		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, handle_t{element_id});
+		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, HandleType{ element_id }, element_index);
+		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, HandleType{element_id});
 		back_element_sparse_to_dense_iterator = sparse_to_dense_it;
 		back_element_dense_to_sparse_iterator = dense_to_sparse_it;
 		back_element_cached_iterator_valid = true;
 
-		return handle_t{ element_id };
+		return HandleType{ element_id };
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::push_back(T&& t) -> handle_t
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::push_back(Value&& t) -> HandleType
 	{
 		std::size_t element_index = dense_vector.size();
 		uint32_t element_id = ++internalIdCounter;
 		dense_vector.push_back(std::move(t));
-		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, handle_t{element_id}, element_index);
-		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, handle_t{ element_id });
+		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, HandleType{element_id}, element_index);
+		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, HandleType{ element_id });
 		back_element_sparse_to_dense_iterator = sparse_to_dense_it;
 		back_element_dense_to_sparse_iterator = dense_to_sparse_it;
 		back_element_cached_iterator_valid = true;
 
-		return handle_t{ element_id };
+		return HandleType{ element_id };
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
 	template <typename ... Args>
-	auto flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::emplace_back(
-		Args&&... args) -> handle_t
+	auto FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::emplace_back(
+		Args&&... args) -> HandleType
 	{
 		std::size_t element_index = dense_vector.size();
 		uint32_t element_id = ++internalIdCounter;
 		dense_vector.emplace_back(std::forward<Args>(args)...);
-		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, handle_t{element_id}, element_index);
-		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, handle_t{element_id});
+		auto sparse_to_dense_it = unordered_map_emplace_and_return_iterator(sparse_to_dense, HandleType{element_id}, element_index);
+		auto dense_to_sparse_it = unordered_map_emplace_and_return_iterator(dense_to_sparse, element_index, HandleType{element_id});
 		back_element_sparse_to_dense_iterator = sparse_to_dense_it;
 		back_element_dense_to_sparse_iterator = dense_to_sparse_it;
 		back_element_cached_iterator_valid = true;
 
-		return handle_t{ element_id };
+		return HandleType{ element_id };
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	void flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(handle_t handleToDelete)
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(HandleType handleToDelete)
 	{
 		auto removing_sparse_to_dense_it = sparse_to_dense.find(handleToDelete);
 		assert(removing_sparse_to_dense_it != sparse_to_dense.end());
@@ -520,26 +521,26 @@ namespace cof
 		back_element_cached_iterator_valid = false;
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	void flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
 		const_iterator position)
 	{
 		std::size_t element_index = position - dense_vector.begin();
 		//TODO: Optimize this with custom function
 		assert(dense_to_sparse.find(element_index) != dense_to_sparse.end());
-		handle_t handle = dense_to_sparse.at(element_index);
+		HandleType handle = dense_to_sparse.at(element_index);
 		
 		erase(handle);
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	void flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::erase(
 		const_iterator first, const_iterator last)
 	{
 		//TODO: Look for optimizations
 
 		auto count = last - first;
-		std::vector<handle_t> handles( count );
+		std::vector<HandleType> handles( count );
 
 		auto offset = first - begin();
 		for (int i = 0; i < count; ++i) {
@@ -548,13 +549,13 @@ namespace cof
 			handles[i] = dense_to_sparse_it->second;
 		}
 
-		for (handle_t handle : handles) {
+		for (HandleType handle : handles) {
 			erase(handle);
 		}
 	}
 
-	template<typename T, typename SparseHandle, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
-	void flat_value_map<T, SparseHandle, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::clear()
+	template<typename SparseHandle, typename Value, typename Allocator, typename SparseToDenseAllocator, typename DenseToSparseAllocator>
+	void FlatValueMap<SparseHandle, Value, Allocator, SparseToDenseAllocator, DenseToSparseAllocator>::clear()
 	{
 		dense_vector.clear();
 		sparse_to_dense.clear();

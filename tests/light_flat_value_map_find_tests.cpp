@@ -21,9 +21,12 @@ struct TestValue
 	friend bool operator!=(const TestValue& lhs, const TestValue& rhs) { return !(lhs == rhs); }
 };
 
-TEST_CASE("light_flat_value_map::find test")
+using TestHandle = FvmHandle<TestValue>;
+
+
+TEST_CASE("LightFlatValueMap::find test")
 {
-	light_flat_value_map<TestValue> flat_value_map{};
+	LightFlatValueMap<TestHandle, TestValue> flat_value_map{};
 
 	TestValue goblin{ 50, "Goblin" };
 	TestValue little_goblin{ 10, "Little Goblin" };
@@ -40,9 +43,9 @@ TEST_CASE("light_flat_value_map::find test")
 	CHECK(*flat_value_map.find(goblin_handle) == goblin);
 	CHECK(*flat_value_map.find(boss_handle) == boss);
 }
-TEST_CASE("const light_flat_value_map::find test")
+TEST_CASE("const LightFlatValueMap::find test")
 {
-	light_flat_value_map<TestValue> flat_value_map{};
+	LightFlatValueMap<TestHandle, TestValue> flat_value_map{};
 
 	TestValue goblin{ 50, "Goblin" };
 	TestValue little_goblin{ 10, "Little Goblin" };
@@ -52,7 +55,7 @@ TEST_CASE("const light_flat_value_map::find test")
 	auto lgoblin_handle = flat_value_map.push_back(little_goblin);
 	auto boss_handle = flat_value_map.push_back(boss);
 
-	const light_flat_value_map<TestValue>& const_flat_value_map = flat_value_map;
+	const LightFlatValueMap<TestHandle, TestValue>& const_flat_value_map = flat_value_map;
 
 	REQUIRE(const_flat_value_map.size() == 3);
 

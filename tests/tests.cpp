@@ -2,11 +2,13 @@
 
 #include <string>
 
+#include <flat_value_map_handle.h>
 #include <flat_value_map.h>
 #include <light_flat_value_map.h>
 
 
 using namespace cof;
+
 
 class Entity
 {
@@ -30,9 +32,12 @@ public:
 	friend bool operator!=(const Entity& lhs, const Entity& rhs) { return !(lhs == rhs); }
 };
 
-TEST_CASE("Basic flat_value_map things")
+using EntityHandle = FvmHandle<Entity>;
+
+
+TEST_CASE("Basic FlatValueMap things")
 {
-	flat_value_map<Entity> entity_vector{};
+	FlatValueMap<EntityHandle, Entity> entity_vector{};
 
 	REQUIRE(entity_vector.empty());
 
@@ -52,9 +57,9 @@ TEST_CASE("Basic flat_value_map things")
 	CHECK(entity_vector.empty());
 }
 
-TEST_CASE("flat_value_map erase by iterator")
+TEST_CASE("FlatValueMap erase by iterator")
 {
-	flat_value_map<Entity> entity_vector{};
+	FlatValueMap<EntityHandle, Entity> entity_vector{};
 	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 	auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
@@ -76,10 +81,10 @@ TEST_CASE("flat_value_map erase by iterator")
 	CHECK(entity_vector[alienHandle] == Entity{ "Alien", {"NonHuman"} });
 }
 
-TEST_CASE("flat_value_map erase by iterator range")	
+TEST_CASE("FlatValueMap erase by iterator range")	
 {
 	{
-		flat_value_map<Entity> entity_vector{};
+		FlatValueMap<EntityHandle, Entity> entity_vector{};
 		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 		auto alienHandle = entity_vector.push_back(Entity{ "Alien", {"NonHuman"} });
@@ -93,7 +98,7 @@ TEST_CASE("flat_value_map erase by iterator range")
 		CHECK(entity_vector[dogHandle] == Entity{ "Dog", {"Animal", "Good boi"} });
 	}
 	{
-		flat_value_map<Entity> entity_vector{};
+		FlatValueMap<EntityHandle, Entity> entity_vector{};
 		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 		auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
@@ -105,7 +110,7 @@ TEST_CASE("flat_value_map erase by iterator range")
 	}
 
 	{
-		flat_value_map<Entity> entity_vector{};
+		FlatValueMap<EntityHandle, Entity> entity_vector{};
 		auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 		auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
 		auto maikoHandle = entity_vector.push_back(Entity{ "Maiko", {"Human", "Programmer"} });
@@ -121,9 +126,9 @@ TEST_CASE("flat_value_map erase by iterator range")
 	}
 }
 
-TEST_CASE("flat_value_map things::find")
+TEST_CASE("FlatValueMap things::find")
 {
-	flat_value_map<Entity> entity_vector;
+	FlatValueMap<EntityHandle, Entity> entity_vector;
 
 	auto dogHandle = entity_vector.push_back(Entity{ "Dog", {"Animal", "Good boi"} });
 	auto catHandle = entity_vector.push_back(Entity{ "Cat", {"Animal", "Lazy"} });
@@ -160,9 +165,9 @@ TEST_CASE("flat_value_map things::find")
 	}
 }
 
-TEST_CASE("Basic light_flat_value_map things")
+TEST_CASE("Basic LightFlatValueMap things")
 {
-	light_flat_value_map<Entity> entity_vector{};
+	LightFlatValueMap<EntityHandle, Entity> entity_vector{};
 
 	REQUIRE(entity_vector.empty());
 

@@ -132,6 +132,7 @@
     <ClInclude Include="include\utils\tmp_compatibility.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="examples\basic_example.cpp" />
     <ClCompile Include="tests\different_allocator_test.cpp" />
     <ClCompile Include="tests\light_flat_value_map_find_tests.cpp" />
     <ClCompile Include="tests\move_only_types_tests.cpp" />
